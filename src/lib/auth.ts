@@ -19,6 +19,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = (user as { role: Role }).role;
         token.organizationId = (user as { organizationId: string }).organizationId;
         token.employeeId = (user as { employeeId: string | null }).employeeId;
+        token.onboarded = (user as { onboarded: boolean }).onboarded;
       }
       return token;
     },
@@ -28,6 +29,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = token.role as Role;
         session.user.organizationId = token.organizationId as string;
         session.user.employeeId = token.employeeId as string | null;
+        session.user.onboarded = token.onboarded as boolean;
       }
       return session;
     },
@@ -44,6 +46,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
+          include: { traineeProfile: { select: { fitnessGoal: true } } },
         });
 
         if (!user || !user.isActive) return null;
@@ -55,6 +58,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isValid) return null;
 
+        // Trainee is onboarded if they have set a fitness goal
+        const onboarded =
+          user.role !== "TRAINEE" ||
+          !!user.traineeProfile?.fitnessGoal;
+
         return {
           id: user.id,
           name: user.name,
@@ -62,6 +70,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           organizationId: user.organizationId,
           employeeId: user.employeeId,
+          onboarded,
         };
       },
     }),

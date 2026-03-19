@@ -13,6 +13,7 @@ import {
   LogOut,
   UserCheck,
   ClipboardList,
+  Upload,
 } from "lucide-react";
 
 interface NavItem {
@@ -25,6 +26,7 @@ const adminNav: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/trainers", label: "Trainers", icon: UserCheck },
   { href: "/admin/trainees", label: "Trainees", icon: Users },
+  { href: "/admin/import", label: "Bulk Import", icon: Upload },
 ];
 
 const trainerNav: NavItem[] = [

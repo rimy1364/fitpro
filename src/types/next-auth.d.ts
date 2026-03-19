@@ -10,6 +10,7 @@ declare module "next-auth" {
       role: Role;
       organizationId: string;
       employeeId: string | null;
+      onboarded: boolean;
     };
   }
 }
@@ -20,5 +21,6 @@ declare module "next-auth/jwt" {
     role: Role;
     organizationId: string;
     employeeId: string | null;
+    onboarded: boolean;
   }
 }

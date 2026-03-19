@@ -16,9 +16,20 @@ export default auth((req) => {
     const role = session.user.role;
     if (role === "ADMIN") return NextResponse.redirect(new URL("/admin", req.url));
     if (role === "TRAINER") return NextResponse.redirect(new URL("/trainer", req.url));
-    if (role === "TRAINEE") return NextResponse.redirect(new URL("/trainee", req.url));
+    if (role === "TRAINEE") {
+      if (!session.user.onboarded) return NextResponse.redirect(new URL("/onboarding", req.url));
+      return NextResponse.redirect(new URL("/trainee", req.url));
+    }
   }
 
+  // Force onboarding for trainees who haven't completed profile
+  if (session?.user.role === "TRAINEE" && !session.user.onboarded) {
+    if (!pathname.startsWith("/onboarding") && !pathname.startsWith("/api/")) {
+      return NextResponse.redirect(new URL("/onboarding", req.url));
+    }
+  }
+
+  // Role-based route protection
   if (pathname.startsWith("/admin") && session?.user.role !== "ADMIN") {
     return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
