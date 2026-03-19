@@ -5,7 +5,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
 
-  const publicPaths = ["/", "/login", "/register", "/api/auth", "/unauthorized"];
+  const publicPaths = ["/", "/login", "/register", "/api/auth", "/api/register", "/unauthorized"];
   const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
 
   if (!session && !isPublic) {
