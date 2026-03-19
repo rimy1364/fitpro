@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     const employeeId = generateEmployeeId("TRAINEE", traineeCount + 1);
     const tempPassword = generateTempPassword();
-    const hashedPassword = await bcrypt.hash(tempPassword, 12);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
     const trainee = await prisma.user.create({
       data: {

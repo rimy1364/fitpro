@@ -53,6 +53,7 @@ export default function RegisterPage() {
       return;
     }
 
+    setLoading(false);
     router.push("/login?registered=true");
   }
 

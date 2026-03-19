@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       slug = `${slug}-${Date.now()}`;
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const org = await prisma.organization.create({
       data: {

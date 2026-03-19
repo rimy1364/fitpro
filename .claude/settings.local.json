@@ -3,7 +3,13 @@
     "allow": [
       "Bash(npx prisma:*)",
       "Bash(npm install:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(vercel --version)",
+      "Bash(vercel env:*)",
+      "Bash(2)",
+      "Bash(vercel --prod --yes)",
+      "Bash(vercel logs:*)",
+      "Bash(vercel inspect:*)"
     ]
   }
 }
