@@ -1,9 +1,10 @@
 import NextAuth from "next-auth";
 import type { Role } from "@prisma/client";
 
-// Lightweight auth for Edge Runtime (middleware) - no bcryptjs, no Prisma
 export const { auth } = NextAuth({
+  secret: process.env.AUTH_SECRET,
   session: { strategy: "jwt" },
+  trustHost: true,
   pages: { signIn: "/login" },
   providers: [],
   callbacks: {
