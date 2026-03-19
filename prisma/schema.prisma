@@ -1,0 +1,288 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  TRAINER
+  TRAINEE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHTLY_ACTIVE
+  MODERATELY_ACTIVE
+  VERY_ACTIVE
+  EXTRA_ACTIVE
+}
+
+enum FitnessGoal {
+  WEIGHT_LOSS
+  MUSCLE_GAIN
+  MAINTAIN_WEIGHT
+  IMPROVE_ENDURANCE
+  IMPROVE_FLEXIBILITY
+  GENERAL_FITNESS
+}
+
+enum DietType {
+  VEGETARIAN
+  VEGAN
+  NON_VEGETARIAN
+  EGGETARIAN
+  PESCATARIAN
+}
+
+enum MealFrequency {
+  TWO_MEALS
+  THREE_MEALS
+  FOUR_MEALS
+  FIVE_MEALS
+  SIX_MEALS
+}
+
+enum PlanStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  password       String
+  role           Role
+  organizationId String
+  employeeId     String?  @unique
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  trainees             TrainerTrainee[]         @relation("TrainerRelation")
+  trainer              TrainerTrainee?          @relation("TraineeRelation")
+  traineeProfile       TraineeProfile?
+  dietAssignments      DietPlanAssignment[]
+  exerciseAssignments  ExercisePlanAssignment[]
+  dietPlansCreated     DietPlan[]
+  exercisePlansCreated ExercisePlan[]
+
+  @@map("users")
+}
+
+model TrainerTrainee {
+  id         String   @id @default(cuid())
+  trainerId  String
+  traineeId  String   @unique
+  assignedAt DateTime @default(now())
+
+  trainer User @relation("TrainerRelation", fields: [trainerId], references: [id], onDelete: Cascade)
+  trainee User @relation("TraineeRelation", fields: [traineeId], references: [id], onDelete: Cascade)
+
+  @@map("trainer_trainees")
+}
+
+model TraineeProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Personal details
+  dateOfBirth DateTime?
+  gender      Gender?
+  height      Float?
+  weight      Float?
+  phone       String?
+  address     String?
+
+  // Lifestyle
+  activityLevel   ActivityLevel?
+  sleepHours      Float?
+  stressLevel     Int?
+  occupation      String?
+  workHoursPerDay Int?
+
+  // Eating habits
+  dietType          DietType?
+  mealFrequency     MealFrequency?
+  waterIntakeLiters Float?
+  foodAllergies     String[]
+  foodPreferences   String?
+  supplementsUsed   String?
+
+  // Fitness
+  fitnessGoal          FitnessGoal?
+  targetWeight         Float?
+  medicalConditions    String?
+  injuryHistory        String?
+  currentFitnessLevel  String?
+  preferredWorkoutTime String?
+  gymAccess            Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("trainee_profiles")
+}
+
+// ─── Diet Plans ───────────────────────────────────────────────────────────────
+
+model DietPlan {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  trainerId     String
+  durationWeeks Int      @default(4)
+  totalCalories Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trainer     User               @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  meals       Meal[]
+  assignments DietPlanAssignment[]
+
+  @@map("diet_plans")
+}
+
+model Meal {
+  id         String  @id @default(cuid())
+  dietPlanId String
+  name       String
+  time       String?
+  calories   Int?
+  protein    Float?
+  carbs      Float?
+  fats       Float?
+
+  dietPlan DietPlan   @relation(fields: [dietPlanId], references: [id], onDelete: Cascade)
+  items    MealItem[]
+
+  @@map("meals")
+}
+
+model MealItem {
+  id       String @id @default(cuid())
+  mealId   String
+  food     String
+  quantity String
+  calories Int?
+
+  meal Meal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  @@map("meal_items")
+}
+
+model DietPlanAssignment {
+  id         String     @id @default(cuid())
+  dietPlanId String
+  traineeId  String
+  status     PlanStatus @default(ACTIVE)
+  startDate  DateTime   @default(now())
+  endDate    DateTime?
+  notes      String?
+  assignedAt DateTime   @default(now())
+
+  dietPlan DietPlan @relation(fields: [dietPlanId], references: [id], onDelete: Cascade)
+  trainee  User     @relation(fields: [traineeId], references: [id], onDelete: Cascade)
+
+  @@map("diet_plan_assignments")
+}
+
+// ─── Exercise Plans ───────────────────────────────────────────────────────────
+
+model ExercisePlan {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  trainerId     String
+  durationWeeks Int      @default(4)
+  daysPerWeek   Int      @default(3)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trainer     User                     @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  workouts    Workout[]
+  assignments ExercisePlanAssignment[]
+
+  @@map("exercise_plans")
+}
+
+model Workout {
+  id             String @id @default(cuid())
+  exercisePlanId String
+  dayName        String
+  dayNumber      Int
+
+  exercisePlan ExercisePlan @relation(fields: [exercisePlanId], references: [id], onDelete: Cascade)
+  exercises    Exercise[]
+
+  @@map("workouts")
+}
+
+model Exercise {
+  id          String  @id @default(cuid())
+  workoutId   String
+  name        String
+  sets        Int?
+  reps        String?
+  duration    String?
+  rest        String?
+  notes       String?
+  muscleGroup String?
+  order       Int     @default(0)
+
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  @@map("exercises")
+}
+
+model ExercisePlanAssignment {
+  id             String     @id @default(cuid())
+  exercisePlanId String
+  traineeId      String
+  status         PlanStatus @default(ACTIVE)
+  startDate      DateTime   @default(now())
+  endDate        DateTime?
+  notes          String?
+  assignedAt     DateTime   @default(now())
+
+  exercisePlan ExercisePlan @relation(fields: [exercisePlanId], references: [id], onDelete: Cascade)
+  trainee      User         @relation(fields: [traineeId], references: [id], onDelete: Cascade)
+
+  @@map("exercise_plan_assignments")
+}
