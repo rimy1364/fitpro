@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!session.user.organizationId) redirect("/unauthorized");
 
   const org = await prisma.organization.findUnique({
-    where: { id: session.user.organizationId },
+    where: { id: session.user.organizationId! },
   });
 
   return (

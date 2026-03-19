@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No trainee data provided." }, { status: 400 });
     }
 
-    const orgId = session.user.organizationId;
+    const orgId = session.user.organizationId!;
     let currentCount = await prisma.user.count({
       where: { organizationId: orgId, role: "TRAINEE" },
     });

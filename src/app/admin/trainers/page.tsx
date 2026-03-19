@@ -7,7 +7,7 @@ import { AddTrainerDialog } from "./add-trainer-dialog";
 
 export default async function TrainersPage() {
   const session = await auth();
-  const orgId = session!.user.organizationId;
+  const orgId = session!.user.organizationId!;
 
   const trainers = await prisma.user.findMany({
     where: { organizationId: orgId, role: "TRAINER" },

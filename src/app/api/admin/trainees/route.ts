@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const traineeCount = await prisma.user.count({
-      where: { organizationId: session.user.organizationId, role: "TRAINEE" },
+      where: { organizationId: session.user.organizationId!, role: "TRAINEE" },
     });
 
     const employeeId = generateEmployeeId("TRAINEE", traineeCount + 1);
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         role: "TRAINEE",
-        organizationId: session.user.organizationId,
+        organizationId: session.user.organizationId!,
         employeeId,
         onboardingStatus: "PENDING",
         traineeProfile: { create: {} },

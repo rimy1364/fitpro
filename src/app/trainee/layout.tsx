@@ -8,7 +8,7 @@ export default async function TraineeLayout({ children }: { children: React.Reac
   if (!session || session.user.role !== "TRAINEE") redirect("/login");
 
   const org = await prisma.organization.findUnique({
-    where: { id: session.user.organizationId },
+    where: { id: session.user.organizationId! },
   });
 
   return (

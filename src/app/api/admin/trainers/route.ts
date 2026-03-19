@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     const trainerCount = await prisma.user.count({
-      where: { organizationId: session.user.organizationId, role: "TRAINER" },
+      where: { organizationId: session.user.organizationId!, role: "TRAINER" },
     });
 
     const employeeId = generateEmployeeId("TRAINER", trainerCount + 1);
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         role: "TRAINER",
-        organizationId: session.user.organizationId,
+        organizationId: session.user.organizationId!,
         employeeId,
       },
     });
@@ -54,7 +54,7 @@ export async function GET() {
   }
 
   const trainers = await prisma.user.findMany({
-    where: { organizationId: session.user.organizationId, role: "TRAINER" },
+    where: { organizationId: session.user.organizationId!, role: "TRAINER" },
     select: { id: true, name: true, email: true, employeeId: true },
     orderBy: { name: "asc" },
   });

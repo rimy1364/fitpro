@@ -8,7 +8,7 @@ export default async function TrainerLayout({ children }: { children: React.Reac
   if (!session || session.user.role !== "TRAINER") redirect("/login");
 
   const org = await prisma.organization.findUnique({
-    where: { id: session.user.organizationId },
+    where: { id: session.user.organizationId! },
   });
 
   return (
