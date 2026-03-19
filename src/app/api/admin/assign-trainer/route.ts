@@ -11,12 +11,17 @@ export async function POST(req: NextRequest) {
   try {
     const { traineeId, trainerId } = await req.json();
 
-    // Upsert the trainer-trainee relationship
-    await prisma.trainerTrainee.upsert({
-      where: { traineeId },
-      create: { traineeId, trainerId },
-      update: { trainerId },
-    });
+    await prisma.$transaction([
+      prisma.trainerTrainee.upsert({
+        where: { traineeId },
+        create: { traineeId, trainerId },
+        update: { trainerId },
+      }),
+      prisma.user.update({
+        where: { id: traineeId },
+        data: { onboardingStatus: "ASSIGNED" },
+      }),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

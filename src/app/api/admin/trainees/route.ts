@@ -35,6 +35,8 @@ export async function POST(req: NextRequest) {
     const tempPassword = generateTempPassword();
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
+    // Create trainee + onboarding token in one transaction
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     const trainee = await prisma.user.create({
       data: {
         name,
@@ -43,12 +45,23 @@ export async function POST(req: NextRequest) {
         role: "TRAINEE",
         organizationId: session.user.organizationId,
         employeeId,
+        onboardingStatus: "PENDING",
         traineeProfile: { create: {} },
+        onboardingToken: {
+          create: { expiresAt },
+        },
       },
+      include: { onboardingToken: true },
     });
 
     return NextResponse.json(
-      { success: true, traineeId: trainee.id, employeeId, tempPassword },
+      {
+        success: true,
+        traineeId: trainee.id,
+        employeeId,
+        tempPassword,
+        onboardingToken: trainee.onboardingToken?.token,
+      },
       { status: 201 }
     );
   } catch (error) {

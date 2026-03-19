@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session || session.user.role !== "ADMIN") redirect("/login");
+  if (!session.user.organizationId) redirect("/unauthorized");
 
   const org = await prisma.organization.findUnique({
     where: { id: session.user.organizationId },

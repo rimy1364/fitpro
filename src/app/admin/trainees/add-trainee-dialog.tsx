@@ -2,18 +2,39 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus, Loader2, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
+
+interface Result {
+  clientId: string;
+  tempPassword: string;
+  onboardingLink: string;
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+  return (
+    <button onClick={copy} className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
+      {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+    </button>
+  );
+}
 
 export function AddTraineeDialog({ orgId }: { orgId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{ clientId: string; tempPassword: string } | null>(null);
+  const [result, setResult] = useState<Result | null>(null);
   const [form, setForm] = useState({ name: "", email: "" });
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -39,7 +60,11 @@ export function AddTraineeDialog({ orgId }: { orgId: string }) {
       return;
     }
 
-    setResult({ clientId: data.employeeId, tempPassword: data.tempPassword });
+    const onboardingLink = data.onboardingToken
+      ? `${window.location.origin}/onboarding/${data.onboardingToken}`
+      : "";
+
+    setResult({ clientId: data.employeeId, tempPassword: data.tempPassword, onboardingLink });
     setLoading(false);
     router.refresh();
   }
@@ -67,27 +92,43 @@ export function AddTraineeDialog({ orgId }: { orgId: string }) {
             Add New Trainee
           </Dialog.Title>
           <Dialog.Description className="text-sm text-gray-500 mb-6">
-            A unique Client ID and temporary password will be generated.
+            An onboarding link will be generated for the trainee to fill their questionnaire.
           </Dialog.Description>
 
           {result ? (
             <div className="space-y-4">
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="font-semibold text-green-800 mb-3">Trainee Added Successfully!</p>
+                <p className="font-semibold text-green-800 mb-3">Trainee Created!</p>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                  <div className="flex items-center justify-between">
                     <span className="text-gray-600">Client ID:</span>
-                    <span className="font-mono font-bold text-gray-900">{result.clientId}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="font-mono font-bold text-gray-900">{result.clientId}</span>
+                      <CopyButton text={result.clientId} />
+                    </div>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex items-center justify-between">
                     <span className="text-gray-600">Temp Password:</span>
-                    <span className="font-mono font-bold text-gray-900">{result.tempPassword}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="font-mono font-bold text-gray-900">{result.tempPassword}</span>
+                      <CopyButton text={result.tempPassword} />
+                    </div>
                   </div>
                 </div>
-                <p className="text-xs text-green-700 mt-3">
-                  Share these credentials with the trainee. They can change the password after login.
-                </p>
               </div>
+
+              {result.onboardingLink && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm font-medium text-blue-800 mb-2">Onboarding Link</p>
+                  <p className="text-xs text-blue-600 mb-2">Share this link with the trainee to complete their questionnaire:</p>
+                  <div className="flex items-center gap-2 bg-white rounded border px-2 py-1.5">
+                    <span className="text-xs text-gray-600 font-mono truncate flex-1">{result.onboardingLink}</span>
+                    <CopyButton text={result.onboardingLink} />
+                  </div>
+                  <p className="text-xs text-blue-500 mt-2">Link expires in 7 days</p>
+                </div>
+              )}
+
               <Button onClick={handleClose} className="w-full">Done</Button>
             </div>
           ) : (

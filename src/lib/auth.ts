@@ -17,11 +17,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as { role: Role }).role;
-        token.organizationId = (user as { organizationId: string }).organizationId;
+        token.organizationId = (user as { organizationId: string | null }).organizationId ?? null;
         token.employeeId = (user as { employeeId: string | null }).employeeId;
         token.onboarded = (user as { onboarded: boolean }).onboarded;
       }
-      // Allow client-side session.update() to mark trainee as onboarded
       if (trigger === "update" && session?.onboarded !== undefined) {
         token.onboarded = session.onboarded;
       }
@@ -31,7 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role as Role;
-        session.user.organizationId = token.organizationId as string;
+        session.user.organizationId = token.organizationId as string | null;
         session.user.employeeId = token.employeeId as string | null;
         session.user.onboarded = token.onboarded as boolean;
       }
@@ -62,9 +61,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isValid) return null;
 
-        // Trainee is onboarded if they have set a fitness goal
+        // SUPER_ADMIN and ADMIN/TRAINER are always "onboarded"
+        // TRAINEE is onboarded when they have filled questionnaire (fitnessGoal set)
         const onboarded =
           user.role !== "TRAINEE" ||
+          user.onboardingStatus === "COMPLETED" ||
+          user.onboardingStatus === "ASSIGNED" ||
           !!user.traineeProfile?.fitnessGoal;
 
         return {

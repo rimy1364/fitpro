@@ -9,7 +9,7 @@ import { formatDate } from "@/lib/utils";
 
 export default async function AdminDashboard() {
   const session = await auth();
-  const orgId = session!.user.organizationId;
+  const orgId = session!.user.organizationId!;
 
   const [trainerCount, traineeCount, recentTrainees, recentTrainers] = await Promise.all([
     prisma.user.count({ where: { organizationId: orgId, role: "TRAINER" } }),
@@ -18,7 +18,9 @@ export default async function AdminDashboard() {
       where: { organizationId: orgId, role: "TRAINEE" },
       orderBy: { createdAt: "desc" },
       take: 5,
-      include: { trainer: { include: { trainer: { select: { name: true } } } } },
+      include: {
+        trainer: { include: { trainer: { select: { name: true } } } },
+      },
     }),
     prisma.user.findMany({
       where: { organizationId: orgId, role: "TRAINER" },
@@ -29,7 +31,11 @@ export default async function AdminDashboard() {
   ]);
 
   const unassignedCount = await prisma.user.count({
-    where: { organizationId: orgId, role: "TRAINEE", trainer: null },
+    where: { organizationId: orgId, role: "TRAINEE", trainer: { is: null } },
+  });
+
+  const pendingCount = await prisma.user.count({
+    where: { organizationId: orgId, role: "TRAINEE", onboardingStatus: "PENDING" },
   });
 
   return (
@@ -44,21 +50,33 @@ export default async function AdminDashboard() {
         <StatCard icon={UserCheck} label="Total Trainers" value={trainerCount} color="blue" />
         <StatCard icon={Users} label="Total Trainees" value={traineeCount} color="green" />
         <StatCard icon={Activity} label="Unassigned Trainees" value={unassignedCount} color="orange" />
-        <StatCard icon={TrendingUp} label="Active Plans" value={trainerCount + traineeCount} color="purple" />
+        <StatCard icon={TrendingUp} label="Pending Onboarding" value={pendingCount} color="purple" />
       </div>
 
-      {unassignedCount > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+      {pendingCount > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 flex items-center justify-between">
           <div>
             <p className="font-medium text-yellow-800">
+              {pendingCount} trainee{pendingCount > 1 ? "s" : ""} haven&apos;t filled their questionnaire yet
+            </p>
+            <p className="text-yellow-700 text-sm">Share their onboarding link to get started</p>
+          </div>
+          <Link href="/admin/trainees?status=PENDING">
+            <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white">View Pending</Button>
+          </Link>
+        </div>
+      )}
+
+      {unassignedCount > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+          <div>
+            <p className="font-medium text-blue-800">
               {unassignedCount} trainee{unassignedCount > 1 ? "s" : ""} not yet assigned to a trainer
             </p>
-            <p className="text-yellow-700 text-sm">Assign them to trainers to get started</p>
+            <p className="text-blue-700 text-sm">Assign them to trainers to get started</p>
           </div>
-          <Link href="/admin/trainees">
-            <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white">
-              Assign Now
-            </Button>
+          <Link href="/admin/trainees?status=COMPLETED">
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">Assign Now</Button>
           </Link>
         </div>
       )}
@@ -85,9 +103,13 @@ export default async function AdminDashboard() {
                         {t.employeeId} · {formatDate(t.createdAt)}
                       </p>
                     </div>
-                    <Badge variant={t.trainer ? "success" : "warning"}>
-                      {t.trainer ? t.trainer.trainer.name : "Unassigned"}
-                    </Badge>
+                    {t.onboardingStatus === "ASSIGNED" ? (
+                      <Badge variant="success">{t.trainer?.trainer.name || "Assigned"}</Badge>
+                    ) : t.onboardingStatus === "COMPLETED" ? (
+                      <Badge variant="info">Completed</Badge>
+                    ) : (
+                      <Badge variant="warning">Pending</Badge>
+                    )}
                   </div>
                 ))}
               </div>

@@ -14,6 +14,7 @@ datasource db {
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 enum Role {
+  SUPER_ADMIN
   ADMIN
   TRAINER
   TRAINEE
@@ -64,15 +65,38 @@ enum PlanStatus {
   PAUSED
 }
 
+enum TraineeStatus {
+  PENDING    // Onboarding link sent, questionnaire not filled
+  COMPLETED  // Questionnaire filled, trainer not yet assigned
+  ASSIGNED   // Trainer assigned
+}
+
+enum TokenStatus {
+  PENDING
+  USED
+  EXPIRED
+}
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  logo      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String           @id @default(cuid())
+  name        String
+  slug        String           @unique
+  logo        String?
+  plan        SubscriptionPlan @default(FREE)
+  isActive    Boolean          @default(true)
+  maxTrainers Int              @default(5)
+  maxTrainees Int              @default(50)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   users User[]
 
@@ -80,28 +104,43 @@ model Organization {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  name           String
-  email          String   @unique
-  password       String
-  role           Role
-  organizationId String
-  employeeId     String?  @unique
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id               String         @id @default(cuid())
+  name             String
+  email            String         @unique
+  password         String
+  role             Role
+  organizationId   String?
+  employeeId       String?        @unique
+  isActive         Boolean        @default(true)
+  onboardingStatus TraineeStatus  @default(PENDING)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   trainees             TrainerTrainee[]         @relation("TrainerRelation")
   trainer              TrainerTrainee?          @relation("TraineeRelation")
   traineeProfile       TraineeProfile?
+  onboardingToken      OnboardingToken?
   dietAssignments      DietPlanAssignment[]
   exerciseAssignments  ExercisePlanAssignment[]
   dietPlansCreated     DietPlan[]
   exercisePlansCreated ExercisePlan[]
 
   @@map("users")
+}
+
+model OnboardingToken {
+  id        String      @id @default(cuid())
+  token     String      @unique @default(cuid())
+  traineeId String      @unique
+  status    TokenStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime    @default(now())
+
+  trainee User @relation(fields: [traineeId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding_tokens")
 }
 
 model TrainerTrainee {

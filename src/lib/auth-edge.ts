@@ -12,7 +12,7 @@ export const { auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as { role: Role }).role;
-        token.organizationId = (user as { organizationId: string }).organizationId;
+        token.organizationId = (user as { organizationId: string | null }).organizationId ?? null;
         token.employeeId = (user as { employeeId: string | null }).employeeId;
         token.onboarded = (user as { onboarded: boolean }).onboarded;
       }
@@ -22,7 +22,7 @@ export const { auth } = NextAuth({
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role as Role;
-        session.user.organizationId = token.organizationId as string;
+        session.user.organizationId = token.organizationId as string | null;
         session.user.employeeId = token.employeeId as string | null;
         session.user.onboarded = token.onboarded as boolean;
       }
