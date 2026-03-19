@@ -5,6 +5,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+interface FormState {
+  dateOfBirth: string;
+  gender: string;
+  height: string;
+  weight: string;
+  phone: string;
+  fitnessGoal: string;
+  targetWeight: string;
+  activityLevel: string;
+  currentFitnessLevel: string;
+  sleepHours: string;
+  waterIntakeLiters: string;
+  medicalConditions: string;
+  injuryHistory: string;
+  dietType: string;
+  preferredWorkoutTime: string;
+  gymAccess: boolean;
+}
+
+interface StepProps {
+  form: FormState;
+  set: (field: string, value: string | boolean) => void;
+}
+
 interface Trainee {
   id: string;
   name: string;
@@ -185,7 +209,7 @@ export function OnboardingForm({ token, trainee }: Props) {
 
 // ─── Step Components ──────────────────────────────────────────────────────────
 
-function Step1({ form, set }: { form: ReturnType<typeof useState<typeof form>>[0]; set: (f: string, v: string | boolean) => void }) {
+function Step1({ form, set }: StepProps) {
   return (
     <>
       <Field label="Date of Birth">
@@ -222,7 +246,7 @@ function Step1({ form, set }: { form: ReturnType<typeof useState<typeof form>>[0
   );
 }
 
-function Step2({ form, set }: { form: ReturnType<typeof useState<typeof form>>[0]; set: (f: string, v: string | boolean) => void }) {
+function Step2({ form, set }: StepProps) {
   return (
     <>
       <Field label="Primary Fitness Goal">
@@ -250,7 +274,7 @@ function Step2({ form, set }: { form: ReturnType<typeof useState<typeof form>>[0
   );
 }
 
-function Step3({ form, set }: { form: ReturnType<typeof useState<typeof form>>[0]; set: (f: string, v: string | boolean) => void }) {
+function Step3({ form, set }: StepProps) {
   return (
     <>
       <Field label="Current Fitness Level">
@@ -295,7 +319,7 @@ function Step3({ form, set }: { form: ReturnType<typeof useState<typeof form>>[0
   );
 }
 
-function Step4({ form, set }: { form: ReturnType<typeof useState<typeof form>>[0]; set: (f: string, v: string | boolean) => void }) {
+function Step4({ form, set }: StepProps) {
   return (
     <>
       <Field label="Any injuries or physical limitations?">
