@@ -1,9 +1,5 @@
 {
+  "name": "fitpro-saas",
   "buildCommand": "prisma generate && next build",
-  "framework": "nextjs",
-  "env": {
-    "DATABASE_URL": "@database-url",
-    "DIRECT_URL": "@direct-url",
-    "AUTH_SECRET": "@auth-secret"
-  }
+  "framework": "nextjs"
 }
