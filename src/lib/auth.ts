@@ -13,13 +13,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = (user as { role: Role }).role;
         token.organizationId = (user as { organizationId: string }).organizationId;
         token.employeeId = (user as { employeeId: string | null }).employeeId;
         token.onboarded = (user as { onboarded: boolean }).onboarded;
+      }
+      // Allow client-side session.update() to mark trainee as onboarded
+      if (trigger === "update" && session?.onboarded !== undefined) {
+        token.onboarded = session.onboarded;
       }
       return token;
     },

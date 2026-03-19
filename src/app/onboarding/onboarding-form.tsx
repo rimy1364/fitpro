@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Loader2, ChevronRight, ChevronLeft, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ const selectClass = "flex h-10 w-full rounded-md border border-input bg-backgrou
 
 export function OnboardingForm({ userId, userName }: { userId: string; userName: string }) {
   const router = useRouter();
+  const { update } = useSession();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -69,10 +71,9 @@ export function OnboardingForm({ userId, userName }: { userId: string; userName:
       return;
     }
 
-    // Refresh session to update onboarded status
-    await fetch("/api/auth/session");
+    // Update JWT so middleware sees onboarded = true immediately
+    await update({ onboarded: true });
     router.push("/trainee");
-    router.refresh();
   }
 
   return (

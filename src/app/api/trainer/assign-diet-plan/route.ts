@@ -11,6 +11,18 @@ export async function POST(req: NextRequest) {
   try {
     const { planId, traineeId } = await req.json();
 
+    // Verify the plan belongs to this trainer
+    const plan = await prisma.dietPlan.findFirst({
+      where: { id: planId, trainerId: session.user.id },
+    });
+    if (!plan) return NextResponse.json({ error: "Plan not found." }, { status: 404 });
+
+    // Verify this trainee is assigned to this trainer
+    const relationship = await prisma.trainerTrainee.findFirst({
+      where: { trainerId: session.user.id, traineeId },
+    });
+    if (!relationship) return NextResponse.json({ error: "Trainee not assigned to you." }, { status: 403 });
+
     // Deactivate existing active diet plan for this trainee
     await prisma.dietPlanAssignment.updateMany({
       where: { traineeId, status: "ACTIVE" },
